@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
         iconRainView.setIconCounts(count > 0 ? count : 5);
         iconRainView.setLaunchDuration(launchDuration > 0 ? launchDuration : 300);
         iconRainView.setFallGravity(fallGravity);
+        iconRainView.setShadeToGone(true);
         iconRainView.setOnIconRainFallListener(new IconRainView.OnIconRainFallListener() {
             @Override
             public void onRainStart() {

@@ -127,7 +127,7 @@ public class IconRainView extends View {
 
     private void rainfall() {
 
-        if (icon == null) {
+        if (icon == null || this.iconCounts < 1) {
             Log.e(TAG, "It can't start now without icon!");
             return;
         }
@@ -155,6 +155,7 @@ public class IconRainView extends View {
             iconInfo.setFallDis(this.fallDistance == -1 ? viewHeight : this.fallDistance);
             iconInfo.setG((random.nextInt(10) + fallGravity) * 0.001f);
             iconInfo.setEjectionAngle(random.nextInt(50) * PI / 180 + PI * 5 / 12);
+            iconInfo.setShadeToGone(this.shadeToGone);
             iconInfoList.add(iconInfo);
         }
         computeRainFall();
@@ -165,8 +166,8 @@ public class IconRainView extends View {
         boolean finished = true;
 
         for (IconInfo iconInfo : iconInfoList) {
-            int[] position = iconInfo.computePos();
-            if (isIconVisible(position)) {
+            iconInfo.computePos();
+            if (isIconVisible(iconInfo)) {
                 finished = false;
             }
         }
@@ -193,18 +194,20 @@ public class IconRainView extends View {
         super.onDraw(canvas);
         for (IconInfo iconInfo : iconInfoList) {
             int[] position = iconInfo.getPosition();
-            if (isIconVisible(position)) {
+            if (isIconVisible(iconInfo)) {
                 icon.setBounds(position[0] - icon.getIntrinsicWidth(), position[1] - icon.getIntrinsicHeight(), position[0], position[1]);
+                icon.setAlpha(iconInfo.alpha);
                 icon.draw(canvas);
             }
         }
     }
 
-    private boolean isIconVisible(int[] position) {
+    private boolean isIconVisible(IconInfo iconInfo) {
+        int[] position = iconInfo.getPosition();
         int iconWidth = icon.getIntrinsicWidth();
         int iconHeight = icon.getIntrinsicHeight();
-        return (position[0] >= -1 && position[0] - iconWidth <= getWidth())
-                && (position[1] >= -1 && position[1] - iconHeight <= getHeight());
+        return iconInfo.alpha != 0 && ((position[0] >= -1 && position[0] - iconWidth <= getWidth())
+                && (position[1] >= -1 && position[1] - iconHeight <= getHeight()));
     }
 
 
@@ -228,6 +231,8 @@ public class IconRainView extends View {
         private long enterEjectionTime = 0;
         //动画开始时间
         private long startTime = 0;
+        private boolean shadeToGone = false;
+        private int alpha = 255;
 
         //实时位置
         private int[] position = new int[]{-1, -1};
@@ -256,6 +261,10 @@ public class IconRainView extends View {
             this.ejectionAngle = ejectionAngle;
         }
 
+        public void setShadeToGone(boolean shadeToGone) {
+            this.shadeToGone = shadeToGone;
+        }
+
         public int[] getPosition() {
             return position;
         }
@@ -270,6 +279,17 @@ public class IconRainView extends View {
                 int ejectionPlayTime = (int) (playTime - enterEjectionTime);
                 position[0] = (int) (posX + this.ejectionVelX * ejectionPlayTime);
                 position[1] = (int) (fallDis + this.ejectionVelY * ejectionPlayTime + Math.pow(ejectionPlayTime, 2) * g / 2);
+
+                if (shadeToGone) {
+                    float currentVelY = this.ejectionVelY + g * ejectionPlayTime;
+                    if (currentVelY > 0) {
+                        this.alpha = (int) ((1 - Math.abs(currentVelY / this.ejectionVelY)) * 255);
+                        if (this.alpha < 0) {
+                            this.alpha = 0;
+                        }
+                    }
+                }
+
             } else {
                 int deltaY = (int) (Math.pow(playTime, 2) / 2 * g + 0.5f);
                 if (deltaY > this.fallDis) {
