@@ -199,12 +199,14 @@ public class IconRainView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        for (IconInfo iconInfo : iconInfoList) {
-            int[] position = iconInfo.getPosition();
-            if (isIconVisible(iconInfo)) {
-                icon.setBounds(position[0] - icon.getIntrinsicWidth(), position[1] - icon.getIntrinsicHeight(), position[0], position[1]);
-                icon.setAlpha(iconInfo.alpha);
-                icon.draw(canvas);
+        if (iconInfoList != null) {
+            for (IconInfo iconInfo : iconInfoList) {
+                int[] position = iconInfo.getPosition();
+                if (isIconVisible(iconInfo)) {
+                    icon.setBounds(position[0] - icon.getIntrinsicWidth(), position[1] - icon.getIntrinsicHeight(), position[0], position[1]);
+                    icon.setAlpha(iconInfo.alpha);
+                    icon.draw(canvas);
+                }
             }
         }
     }
