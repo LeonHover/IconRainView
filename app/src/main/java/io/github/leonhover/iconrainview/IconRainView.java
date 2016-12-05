@@ -56,13 +56,20 @@ public class IconRainView extends View {
 
     private void init(Context context, AttributeSet attrs, int defStyleAttr) {
         if (attrs != null) {
-            TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.IconRainView);
-            this.iconCounts = typedArray.getInt(R.styleable.IconRainView_iconCount, DEFAULT_ICON_COUNT);
-            this.launchDuration = typedArray.getInt(R.styleable.IconRainView_launchDuration, DEFAULT_LAUNCH_DURATION);
-            this.icon = typedArray.getDrawable(R.styleable.IconRainView_icon);
-            this.fallGravity = typedArray.getInt(R.styleable.IconRainView_fallGravity, DEFAULT_FALL_GRAVITY);
-            this.shadeToGone = typedArray.getBoolean(R.styleable.IconRainView_shadeToGone, false);
-            this.fallDistance = typedArray.getDimensionPixelSize(R.styleable.IconRainView_fallDistance, -1);
+            TypedArray typedArray = null;
+            try {
+                typedArray = context.obtainStyledAttributes(attrs, R.styleable.IconRainView);
+                this.iconCounts = typedArray.getInt(R.styleable.IconRainView_iconCount, DEFAULT_ICON_COUNT);
+                this.launchDuration = typedArray.getInt(R.styleable.IconRainView_launchDuration, DEFAULT_LAUNCH_DURATION);
+                this.icon = typedArray.getDrawable(R.styleable.IconRainView_icon);
+                this.fallGravity = typedArray.getInt(R.styleable.IconRainView_fallGravity, DEFAULT_FALL_GRAVITY);
+                this.shadeToGone = typedArray.getBoolean(R.styleable.IconRainView_shadeToGone, false);
+                this.fallDistance = typedArray.getDimensionPixelSize(R.styleable.IconRainView_fallDistance, -1);
+            } finally {
+                if (typedArray != null) {
+                    typedArray.recycle();
+                }
+            }
         }
     }
 
@@ -291,7 +298,7 @@ public class IconRainView extends View {
                 }
 
             } else {
-                int deltaY = (int) (Math.pow(playTime, 2) / 2 * g + 0.5f);
+                int deltaY = (int) (Math.pow(playTime, 2) / 2 * g + 0.5f) + this.posY;
                 if (deltaY > this.fallDis) {
                     position[1] = this.fallDis;
                     enterEjectionTime = playTime;
