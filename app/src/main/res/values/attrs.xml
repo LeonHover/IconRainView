@@ -2,10 +2,11 @@
 <resources>
     <declare-styleable name="IconRainView">
         <attr name="launchDuration" format="reference|integer" />
-        <attr name="iconCount" format="reference|integer" />
+        <attr name="firstTimeIconCount" format="reference|integer" />
         <attr name="icon" format="reference" />
         <attr name="fallGravity" format="reference|integer" />
         <attr name="fallDistance" format="reference|dimension" />
         <attr name="shadeToGone" format="reference|boolean" />
+        <attr name="sound" format="reference" />
     </declare-styleable>
 </resources>

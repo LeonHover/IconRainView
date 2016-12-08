@@ -1,36 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/text"
+    <io.github.leonhover.iconrainview.IconRainView
+        android:id="@+id/icon_rain"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="300dp"
+        app:fallGravity="7"
+        app:firstTimeIconCount="10"
+        app:launchDuration="300"
+        app:shadeToGone="true"
+        app:sound="@raw/sound"
+        app:icon="@mipmap/coin"/>
 
-    <EditText
-        android:id="@+id/count_edt"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:hint="Icon Count" />
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 
-    <EditText
-        android:id="@+id/launch_duration_edt"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:hint="launch Duration" />
+        <EditText
+            android:id="@+id/count_edt"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:hint="Icon Count" />
 
-    <EditText
-        android:id="@+id/fall_gravity_edt"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:hint="fall ravity" />
+        <EditText
+            android:id="@+id/launch_duration_edt"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:hint="launch Duration" />
 
-    <Button
+        <EditText
+            android:id="@+id/fall_gravity_edt"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:hint="fall ravity" />
+    </LinearLayout>
+
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:onClick="restart"
-        android:text="restart" />
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:onClick="start"
+            android:text="start" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:onClick="popup"
+            android:text="popup" />
+    </LinearLayout>
 </LinearLayout>

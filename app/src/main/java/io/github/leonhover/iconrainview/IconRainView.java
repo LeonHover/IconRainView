@@ -6,11 +6,14 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.media.AudioManager;
+import android.media.SoundPool;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 
-import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
@@ -23,11 +26,11 @@ public class IconRainView extends View {
     private final static String TAG = IconRainView.class.getSimpleName();
 
     private static final float PI = 3.14f;
-    private static final int DEFAULT_ICON_COUNT = 5;
     private static final int DEFAULT_LAUNCH_DURATION = 300;
     private static final int DEFAULT_FALL_GRAVITY = 5;
+    private static final int DEFAULT_INVIDATE_INTERVAL = 16;
 
-    private int iconCounts = DEFAULT_ICON_COUNT;
+    private int firstTimeIconCount = 0;
     private Drawable icon = null;
     private int launchDuration = DEFAULT_LAUNCH_DURATION;
     private List<IconInfo> iconInfoList;
@@ -35,6 +38,12 @@ public class IconRainView extends View {
     private int fallGravity = DEFAULT_FALL_GRAVITY;
     private boolean shadeToGone = false;
     private int fallDistance = -1;
+
+    private SoundPool soundPool;
+    private int soundId = -1;
+    private int soundResId = -1;
+    private AudioManager audioManager;
+    private boolean isSoundReady = false;
 
     private OnIconRainFallListener onIconRainFallListener;
 
@@ -59,28 +68,27 @@ public class IconRainView extends View {
             TypedArray typedArray = null;
             try {
                 typedArray = context.obtainStyledAttributes(attrs, R.styleable.IconRainView);
-                this.iconCounts = typedArray.getInt(R.styleable.IconRainView_iconCount, DEFAULT_ICON_COUNT);
+                this.firstTimeIconCount = typedArray.getInt(R.styleable.IconRainView_firstTimeIconCount, 0);
                 this.launchDuration = typedArray.getInt(R.styleable.IconRainView_launchDuration, DEFAULT_LAUNCH_DURATION);
                 this.icon = typedArray.getDrawable(R.styleable.IconRainView_icon);
                 this.fallGravity = typedArray.getInt(R.styleable.IconRainView_fallGravity, DEFAULT_FALL_GRAVITY);
                 this.shadeToGone = typedArray.getBoolean(R.styleable.IconRainView_shadeToGone, false);
                 this.fallDistance = typedArray.getDimensionPixelSize(R.styleable.IconRainView_fallDistance, -1);
+                this.soundResId = typedArray.getResourceId(R.styleable.IconRainView_sound, -1);
             } finally {
                 if (typedArray != null) {
                     typedArray.recycle();
                 }
             }
         }
+
+        soundPool = new SoundPool(5, AudioManager.STREAM_MUSIC, 0);
+        this.audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        iconInfoList = new LinkedList<>();
     }
 
     public void setOnIconRainFallListener(OnIconRainFallListener onIconRainFallListener) {
         this.onIconRainFallListener = onIconRainFallListener;
-    }
-
-    public void setIconCounts(int iconCounts) {
-        if (!isRaining) {
-            this.iconCounts = iconCounts;
-        }
     }
 
     public void setFallDistance(int fallDistance) {
@@ -119,11 +127,20 @@ public class IconRainView extends View {
         }
     }
 
-    public void startRainFall() {
+    public void setSound(int soundResId) {
+        this.soundResId = soundResId;
+    }
+
+    public void startRainFall(final int iconCount) {
+
+        if (iconCount < 1) {
+            return;
+        }
+
         this.post(new Runnable() {
             @Override
             public void run() {
-                rainfall();
+                configRainfall(iconCount);
             }
         });
     }
@@ -132,40 +149,71 @@ public class IconRainView extends View {
         return isRaining;
     }
 
-    private void rainfall() {
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        startRainFall(this.firstTimeIconCount);
+    }
 
-        if (icon == null || this.iconCounts < 1) {
+    private void configRainfall(int iconCount) {
+
+        if (icon == null || iconCount < 1) {
             Log.e(TAG, "It can't start now without icon!");
             return;
         }
 
-        if (isRaining) {
-            Log.e(TAG, "It is raining,can't start now");
-            return;
-        }
         isRaining = true;
         Log.d(TAG, "icon rain fall start");
 
         if (this.onIconRainFallListener != null) {
             this.onIconRainFallListener.onRainStart();
         }
+
         int viewWidth = getWidth();
         int viewHeight = getHeight();
-        iconInfoList = new ArrayList<>(iconCounts);
         Random random = new Random();
         //随机分布ICON的位置和弹射参数
-        for (int i = 0; i < iconCounts; i++) {
+        for (int i = 0; i < iconCount; i++) {
             IconInfo iconInfo = new IconInfo();
             iconInfo.setPosX(random.nextInt(viewWidth / 3) + viewWidth / 3 + icon.getIntrinsicWidth());
-            iconInfo.setPosY(-icon.getIntrinsicHeight());
+            iconInfo.setPosY(0);
             iconInfo.setStartTime(System.currentTimeMillis() + random.nextInt(this.launchDuration));
             iconInfo.setFallDis(this.fallDistance == -1 ? viewHeight : this.fallDistance);
-            iconInfo.setG((random.nextInt(10) + fallGravity) * 0.001f);
+            iconInfo.setG((random.nextInt(10) * 0.1f + fallGravity) * 0.001f);
             iconInfo.setEjectionAngle(random.nextInt(50) * PI / 180 + PI * 5 / 12);
             iconInfo.setShadeToGone(this.shadeToGone);
             iconInfoList.add(iconInfo);
         }
+
+        if (isSoundReady || soundResId == -1) {
+            playRainFall();
+        } else {
+            soundId = soundPool.load(getContext(), this.soundResId, 1);
+            soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
+                @Override
+                public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
+                    Log.d(TAG, "sampleId = " + sampleId);
+                    isSoundReady = true;
+                    if (isRaining) {
+                        playRainFall();
+                    }
+                }
+            });
+        }
+
+    }
+
+    private void playRainFall() {
+        int volume = this.audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        soundPool.play(soundId, volume, volume, 1, 0, 1.0f);
         computeRainFall();
+    }
+
+    public void cancel() {
+        this.removeCallbacks(null);
+        this.iconInfoList.clear();
+        this.isRaining = false;
+        invalidate();
     }
 
     private void computeRainFall() {
@@ -174,9 +222,7 @@ public class IconRainView extends View {
 
         for (IconInfo iconInfo : iconInfoList) {
             iconInfo.computePos();
-            if (isIconVisible(iconInfo)) {
-                finished = false;
-            }
+            finished = false;
         }
 
         invalidate();
@@ -192,21 +238,23 @@ public class IconRainView extends View {
                 public void run() {
                     computeRainFall();
                 }
-            }, 5);
+            }, DEFAULT_INVIDATE_INTERVAL);
         }
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (iconInfoList != null) {
-            for (IconInfo iconInfo : iconInfoList) {
-                int[] position = iconInfo.getPosition();
-                if (isIconVisible(iconInfo)) {
-                    icon.setBounds(position[0] - icon.getIntrinsicWidth(), position[1] - icon.getIntrinsicHeight(), position[0], position[1]);
-                    icon.setAlpha(iconInfo.alpha);
-                    icon.draw(canvas);
-                }
+        Iterator<IconInfo> iconInfoIterator = iconInfoList.iterator();
+        while (iconInfoIterator.hasNext()) {
+            IconInfo iconInfo = iconInfoIterator.next();
+            int[] position = iconInfo.getPosition();
+            if (isIconVisible(iconInfo)) {
+                icon.setBounds(position[0] - icon.getIntrinsicWidth(), position[1] - icon.getIntrinsicHeight(), position[0], position[1]);
+                icon.setAlpha(iconInfo.alpha);
+                icon.draw(canvas);
+            } else {
+                iconInfoIterator.remove();
             }
         }
     }
@@ -316,6 +364,14 @@ public class IconRainView extends View {
             return this.position;
         }
 
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        cancel();
+        soundPool.release();
+        soundPool = null;
     }
 
     public interface OnIconRainFallListener {
