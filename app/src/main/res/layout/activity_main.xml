@@ -14,7 +14,7 @@
         app:firstTimeIconCount="10"
         app:launchDuration="300"
         app:shadeToGone="true"
-        app:sound="@raw/sound"
+        app:sound="@raw/music"
         app:icon="@mipmap/coin"/>
 
     <LinearLayout

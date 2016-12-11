@@ -11,7 +11,6 @@ import android.media.SoundPool;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
-
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;

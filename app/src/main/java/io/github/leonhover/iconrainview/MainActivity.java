@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
         iconRainView.setLaunchDuration(launchDuration > 0 ? launchDuration : 300);
         iconRainView.setFallGravity(fallGravity);
         iconRainView.setShadeToGone(true);
-        iconRainView.setSound(R.raw.sound);
+        iconRainView.setSound(R.raw.music);
         iconRainView.setOnIconRainFallListener(new IconRainView.OnIconRainFallListener() {
             @Override
             public void onRainStart() {
@@ -72,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
         iconRainView.setLaunchDuration(launchDuration > 0 ? launchDuration : 300);
         iconRainView.setFallGravity(fallGravity);
         iconRainView.setShadeToGone(true);
+        iconRainView.setSound(R.raw.music);
 
         iconRainView.setOnIconRainFallListener(new IconRainView.OnIconRainFallListener() {
             @Override
@@ -82,9 +83,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onRainFinish() {
                 Log.d(TAG, "onRainFinish");
-                if (popupWindow != null) {
-                    popupWindow.dismiss();
-                }
             }
         });
         iconRainView.startRainFall(count > 0 ? count : 5);
